@@ -2,7 +2,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 
-MODEL_PATH = "models/goechoo-v1"
+MODEL_PATH = "models/goechoo-v2"
 
 
 def load_model():
@@ -16,7 +16,7 @@ def load_model():
     return tokenizer, model
 
 
-def punctuate(text, tokenizer, model):
+def clean_text(text, tokenizer, model):
 
     input_text = "punctuate: " + text
 
@@ -35,20 +35,19 @@ def punctuate(text, tokenizer, model):
             num_beams=4,
         )
 
-    result = tokenizer.decode(
+    return tokenizer.decode(
         output[0],
         skip_special_tokens=True,
     )
 
-    return result
-
 
 def main():
 
-    print("Loading Go Echoo V1...")
+    print("Loading Go Echoo V2...")
+
     tokenizer, model = load_model()
 
-    print("\nGo Echoo V1 is ready!")
+    print("\nGo Echoo V2 is ready!")
     print("Type 'exit' to quit.\n")
 
     while True:
@@ -61,7 +60,7 @@ def main():
         if not text:
             continue
 
-        result = punctuate(
+        result = clean_text(
             text,
             tokenizer,
             model,

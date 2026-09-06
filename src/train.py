@@ -15,12 +15,12 @@ from transformers import (
 # Configuration
 # -----------------------------
 
-MODEL_NAME = "google-t5/t5-small"
+MODEL_PATH = "models/goechoo-v1"
 
-TRAIN_FILE = Path("data/processed/v1/train.jsonl")
-VALIDATION_FILE = Path("data/processed/v1/validation.jsonl")
+TRAIN_FILE = Path("data/processed/v2/train.jsonl")
+VALIDATION_FILE = Path("data/processed/v2/validation.jsonl")
 
-OUTPUT_DIR = "models/goechoo-v1"
+OUTPUT_DIR = "models/goechoo-v2"
 
 MAX_INPUT_LENGTH = 128
 MAX_TARGET_LENGTH = 128
@@ -31,16 +31,17 @@ MAX_TARGET_LENGTH = 128
 # -----------------------------
 
 def load_jsonl(path):
+
     examples = []
 
     with open(path, "r", encoding="utf-8") as file:
+
         for line in file:
+
             line = line.strip()
 
-            if not line:
-                continue
-
-            examples.append(json.loads(line))
+            if line:
+                examples.append(json.loads(line))
 
     return examples
 
@@ -51,7 +52,7 @@ def load_jsonl(path):
 
 def main():
 
-    print("Loading dataset...")
+    print("Loading V2 dataset...")
 
     train_examples = load_jsonl(TRAIN_FILE)
     validation_examples = load_jsonl(VALIDATION_FILE)
@@ -60,10 +61,6 @@ def main():
     print(f"Validation examples: {len(validation_examples)}")
 
 
-    # -------------------------
-    # Convert to Hugging Face Dataset
-    # -------------------------
-
     dataset = DatasetDict({
         "train": Dataset.from_list(train_examples),
         "validation": Dataset.from_list(validation_examples),
@@ -71,21 +68,21 @@ def main():
 
 
     # -------------------------
-    # Load tokenizer
+    # Load V1 tokenizer
     # -------------------------
 
-    print("\nLoading tokenizer...")
+    print("\nLoading Go Echoo V1 tokenizer...")
 
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 
 
     # -------------------------
-    # Load model
+    # Load V1 model
     # -------------------------
 
-    print("Loading T5 model...")
+    print("Loading Go Echoo V1 model...")
 
-    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH)
 
 
     # -------------------------
@@ -118,7 +115,7 @@ def main():
         return model_inputs
 
 
-    print("\nTokenizing dataset...")
+    print("\nTokenizing V2 dataset...")
 
     tokenized_dataset = dataset.map(
         tokenize_function,
@@ -138,10 +135,11 @@ def main():
 
 
     # -------------------------
-    # Training arguments
+    # Training
     # -------------------------
 
     training_args = Seq2SeqTrainingArguments(
+
         output_dir=OUTPUT_DIR,
 
         num_train_epochs=3,
@@ -149,7 +147,8 @@ def main():
         per_device_train_batch_size=4,
         per_device_eval_batch_size=4,
 
-        learning_rate=3e-4,
+        learning_rate=1e-4,
+
         weight_decay=0.01,
 
         eval_strategy="epoch",
@@ -170,12 +169,10 @@ def main():
     )
 
 
-    # -------------------------
-    # Trainer
-    # -------------------------
-
     trainer = Seq2SeqTrainer(
+
         model=model,
+
         args=training_args,
 
         train_dataset=tokenized_dataset["train"],
@@ -187,26 +184,22 @@ def main():
     )
 
 
-    # -------------------------
-    # Train
-    # -------------------------
-
-    print("\nStarting training...")
+    print("\nStarting Go Echoo V2 training...")
     print("--------------------------------")
 
     trainer.train()
 
 
     # -------------------------
-    # Save final model
+    # Save V2
     # -------------------------
 
-    print("\nSaving Go Echoo V1 model...")
+    print("\nSaving Go Echoo V2...")
 
     trainer.save_model(OUTPUT_DIR)
     tokenizer.save_pretrained(OUTPUT_DIR)
 
-    print("\nTraining complete!")
+    print("\nV2 training complete!")
     print(f"Model saved to: {OUTPUT_DIR}")
 
 

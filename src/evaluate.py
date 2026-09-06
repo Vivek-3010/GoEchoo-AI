@@ -1,11 +1,10 @@
 import json
 import torch
-from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 
-MODEL_PATH = "models/goechoo-v1"
-TEST_FILE = "data/processed/v1/test.jsonl"
+MODEL_PATH = "models/goechoo-v2"
+TEST_FILE = "data/processed/v2/test.jsonl"
 
 
 def load_test_data():
@@ -21,15 +20,13 @@ def load_test_data():
 
 def main():
 
-    print("Loading Go Echoo V1...")
+    print("Loading Go Echoo V2...")
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
     model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_PATH)
 
     model.eval()
-
-    device = torch.device("cpu")
-    model.to(device)
+    model.to("cpu")
 
     examples = load_test_data()
 
@@ -47,9 +44,10 @@ def main():
             return_tensors="pt",
             truncation=True,
             max_length=128,
-        ).to(device)
+        )
 
         with torch.no_grad():
+
             output = model.generate(
                 **inputs,
                 max_length=128,
