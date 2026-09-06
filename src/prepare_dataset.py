@@ -1,19 +1,14 @@
 import json
 import random
+import argparse
 from pathlib import Path
 
 
-VERSION = "v2"
-
-INPUT_FILE = Path(f"data/raw/{VERSION}_dataset.jsonl")
-OUTPUT_DIR = Path(f"data/processed/{VERSION}")
-
-
-def load_data():
+def load_data(input_file):
 
     examples = []
 
-    with open(INPUT_FILE, "r", encoding="utf-8") as file:
+    with open(input_file, "r", encoding="utf-8") as file:
 
         for line_number, line in enumerate(file, start=1):
 
@@ -52,13 +47,29 @@ def normalize_text(text):
 
 def main():
 
-    print(f"Preparing {VERSION.upper()} dataset...")
+    parser = argparse.ArgumentParser()
 
-    examples = load_data()
+    parser.add_argument(
+        "--version",
+        required=True,
+        help="Dataset version, for example v1, v2, v3"
+    )
+
+    args = parser.parse_args()
+
+    version = args.version
+
+    input_file = Path(f"data/raw/{version}_dataset.jsonl")
+    output_dir = Path(f"data/processed/{version}")
+
+    print(f"Preparing {version.upper()} dataset...")
+
+    examples = load_data(input_file)
 
     print(f"Loaded examples: {len(examples)}")
 
     # Remove duplicates
+
     unique_examples = []
     seen = set()
 
@@ -70,6 +81,7 @@ def main():
         )
 
         if key not in seen:
+
             seen.add(key)
             unique_examples.append(example)
 
@@ -77,16 +89,25 @@ def main():
 
     print(f"After removing duplicates: {len(examples)}")
 
-    # Validate word preservation
+    # Validate that words are preserved.
+    # This allows spelling corrections by checking
+    # only that the number of words is unchanged.
+
     valid_examples = []
 
     for example in examples:
 
-        input_normalized = normalize_text(example["input"])
-        target_normalized = normalize_text(example["target"])
+        input_words = normalize_text(
+            example["input"]
+        ).split()
 
-        if input_normalized != target_normalized:
-            print("\nWARNING - word mismatch:")
+        target_words = normalize_text(
+            example["target"]
+        ).split()
+
+        if len(input_words) != len(target_words):
+
+            print("\nWARNING - word count mismatch:")
             print("INPUT :", example["input"])
             print("TARGET:", example["target"])
 
@@ -99,6 +120,7 @@ def main():
     print(f"After validation: {len(examples)}")
 
     # Shuffle
+
     random.seed(42)
     random.shuffle(examples)
 
@@ -113,15 +135,19 @@ def main():
     validation_data = examples[train_end:validation_end]
     test_data = examples[validation_end:]
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     def save(data, filename):
 
-        path = OUTPUT_DIR / filename
+        path = output_dir / filename
 
         with open(path, "w", encoding="utf-8") as file:
 
             for item in data:
+
                 file.write(
                     json.dumps(
                         item,
