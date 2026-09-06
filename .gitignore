@@ -1,0 +1,37 @@
+# Virtual environment
+
+.venv/
+venv/
+
+# Python cache
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# Environment variables
+
+.env
+
+# Model files and checkpoints
+
+models/
+checkpoint-*/
+
+# Dataset files
+
+data/raw/
+data/processed/
+
+# VS Code
+
+.vscode/
+
+# Jupyter
+
+.ipynb_checkpoints/
+
+# OS files
+
+.DS_Store
+Thumbs.db
